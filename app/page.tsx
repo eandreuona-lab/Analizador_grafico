@@ -154,12 +154,59 @@ export default function Home() {
           </>
         )}
 
-        {/* COMPARACIÓN */}
-        {mode === "compare" && (
-          <>
-            <CompareChart data1={data1} data2={data2} />
-          </>
-        )}
+      {mode === "compare" && (
+  <>
+    <div className="grid md:grid-cols-2 gap-3 text-sm">
+
+      <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} p-2 rounded border`}>
+        <h3 className="mb-1">Periodo 1</h3>
+
+        <input
+          type="date"
+          value={startDate1}
+          onChange={(e) => setStartDate1(e.target.value)}
+          className={`p-1 border rounded w-full ${
+            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
+          }`}
+        />
+
+        <input
+          type="date"
+          value={endDate1}
+          onChange={(e) => setEndDate1(e.target.value)}
+          className={`p-1 border rounded w-full mt-1 ${
+            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
+          }`}
+        />
+      </div>
+
+      <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} p-2 rounded border`}>
+        <h3 className="mb-1">Periodo 2</h3>
+
+        <input
+          type="date"
+          value={startDate2}
+          onChange={(e) => setStartDate2(e.target.value)}
+          className={`p-1 border rounded w-full ${
+            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
+          }`}
+        />
+
+        <input
+          type="date"
+          value={endDate2}
+          onChange={(e) => setEndDate2(e.target.value)}
+          className={`p-1 border rounded w-full mt-1 ${
+            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
+          }`}
+        />
+      </div>
+
+    </div>
+
+    <CompareChart data1={data1} data2={data2} />
+  </>
+)}
 
       </div>
     </main>
