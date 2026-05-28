@@ -133,8 +133,10 @@ export default function Home() {
       groups[key].push(d);
     });
 
-    return Object.values(groups).map((group: any) => ({
-      datetime: new Date(group[0].datetime),
+    
+return Object.values(groups).map((group: any) => ({
+  datetime: group[0].datetime,
+
       value:
         group.reduce((a: number, b: any) => a + b.value, 0) /
         group.length,
