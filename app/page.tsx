@@ -153,68 +153,76 @@ const diffPercent =
   // UI
   // =========================
 
-  return (
-    <main className={`${dark ? "bg-[#0f172a] text-white" : "bg-[#f4f6f8]"} min-h-screen`}>
+return (
+  <main className={`${dark ? "bg-[#0f172a] text-white" : "bg-gray-100"} min-h-screen`}>
 
-      {/* HEADER */}
-      <header className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
-        <div className="w-full px-4 py-2 flex gap-4 items-center">
-          <img src="/logo.png" className="h-8" />
+    {/* ✅ HEADER */}
+    <header className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
+      <div className="flex items-center px-6 py-3 gap-4">
 
-          <div>
-            <h1 className="text-lg font-semibold">Ona Hotels Energy</h1>
-            <p className="text-xs text-gray-400">Analizador energético</p>
-          </div>
+        /logo.png
 
-          <button
-            onClick={() => setDark(!dark)}
-            className="ml-auto px-3 py-1 bg-gray-200 rounded"
+        <div>
+          <h1 className="text-lg font-semibold">Ona Hotels Energy</h1>
+          <p className="text-xs text-gray-400">Energy analytics tool</p>
+        </div>
+
+        <button
+          onClick={() => setDark(!dark)}
+          className="ml-auto px-3 py-1 bg-gray-200 rounded"
+        >
+          {dark ? "Light" : "Dark"}
+        </button>
+      </div>
+    </header>
+
+    {/* ✅ CONTROL PANEL (TIPO DEXMA) */}
+    <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
+      <div className="flex flex-wrap gap-4 px-6 py-3 items-center text-sm">
+
+        {/* DEVICE */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Device</span>
+          <select
+            value={selectedHotel}
+            onChange={(e) => setSelectedHotel(e.target.value)}
+            className="p-1 border rounded"
           >
-            {dark ? "Light" : "Dark"}
-          </button>
-        </div>
-      </header>
-
-      {/* CONTENIDO */}
-      <div className="p-4 space-y-4">
-
-        {/* MODO */}
-        <div className="flex gap-2">
-          <button onClick={() => setMode("single")} className={`px-3 py-1 rounded ${mode === "single" ? "bg-teal-500 text-white" : "bg-gray-200"}`}>
-            Curva
-          </button>
-
-          <button onClick={() => setMode("compare")} className={`px-3 py-1 rounded ${mode === "compare" ? "bg-teal-500 text-white" : "bg-gray-200"}`}>
-            Comparación
-          </button>
-        </div>
-
-        {/* FILTROS */}
-        <div className="flex flex-wrap gap-3">
-
-          {/* HOTEL */}
-          <select onChange={(e) => setSelectedHotel(e.target.value)} className="p-2 border rounded">
-            <option>Selecciona hotel</option>
+            <option value="">Select</option>
             {hotels.map((h) => (
               <option key={h.file} value={h.file}>{h.name}</option>
             ))}
           </select>
+        </div>
 
-          {/* FREQUENCY */}
+        {/* FREQUENCY */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Frequency</span>
+
           <div className="flex gap-1">
             {["30m", "h", "d", "w", "m"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFrequency(f)}
-                className={`px-2 py-1 rounded ${frequency === f ? "bg-green-500 text-white" : "bg-gray-200"}`}
+                className={`px-2 py-1 rounded ${
+                  frequency === f ? "bg-green-500 text-white" : "bg-gray-200"
+                }`}
               >
                 {f}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* WINDOW */}
-          <select onChange={(e) => setWindowSize(e.target.value)} className="p-2 border rounded">
+        {/* WINDOW */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Window</span>
+
+          <select
+            value={windowSize}
+            onChange={(e) => setWindowSize(e.target.value)}
+            className="p-1 border rounded"
+          >
             <option value="1d">1 día</option>
             <option value="1w">1 semana</option>
             <option value="15d">15 días</option>
@@ -222,46 +230,84 @@ const diffPercent =
             <option value="3m">3 meses</option>
             <option value="6m">6 meses</option>
           </select>
-
-          <input type="date" value={baseDate} onChange={(e) => setBaseDate(e.target.value)} className="p-2 border rounded" />
-          <input type="date" value={periodDate} onChange={(e) => setPeriodDate(e.target.value)} className="p-2 border rounded" />
-
         </div>
 
-        {/* ✅ MODO CURVA */}
-        {mode === "single" && (
-          <Chart data={data} />
-        )}
+        {/* BASE */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Base</span>
+          <input
+            type="date"
+            value={baseDate}
+            onChange={(e) => setBaseDate(e.target.value)}
+            className="p-1 border rounded"
+          />
+        </div>
 
-        {/* ✅ MODO COMPARACIÓN */}
-        {mode === "compare" && (
-          <>
-            {/* KPIs */}
-            <div className="grid grid-cols-3 gap-4">
+        {/* PERIOD */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Period</span>
+          <input
+            type="date"
+            value={periodDate}
+            onChange={(e) => setPeriodDate(e.target.value)}
+            className="p-1 border rounded"
+          />
+        </div>
 
-              <div className="p-3 bg-gray-100 rounded">
-                <div className="text-xs">Base</div>
-                <div>{total1.toFixed(0)} kWh</div>
-              </div>
+        {/* MODE TOGGLE */}
+        <div className="ml-auto flex gap-1">
+          <button
+            onClick={() => setMode("single")}
+            className={`px-2 py-1 rounded ${mode === "single" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          >
+            Curve
+          </button>
 
-              <div className="p-3 bg-gray-100 rounded">
-                <div className="text-xs">Periodo</div>
-                <div>{total2.toFixed(0)} kWh</div>
-              </div>
-
-              <div className={`p-3 rounded ${diffKwh > 0 ? "bg-red-200" : "bg-green-200"}`}>
-                <div className="text-xs">Diferencia</div>
-                <div>{diffKwh.toFixed(0)} kWh</div>
-                <div>{diffPercent.toFixed(1)} %</div>
-              </div>
-
-            </div>
-
-            <CompareChart data1={data1Agg} data2={data2Agg} />
-          </>
-        )}
+          <button
+            onClick={() => setMode("compare")}
+            className={`px-2 py-1 rounded ${mode === "compare" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          >
+            Compare
+          </button>
+        </div>
 
       </div>
-    </main>
-  );
-}
+    </div>
+
+    {/* ✅ CONTENIDO */}
+    <div className="p-6 space-y-4">
+
+      {/* KPIs SOLO EN COMPARACIÓN */}
+      {mode === "compare" && (
+        <div className="grid grid-cols-3 gap-4">
+
+          <div className="bg-white p-4 rounded shadow">
+            <div className="text-xs text-gray-500">Base</div>
+            <div className="text-xl font-bold">{total1.toFixed(0)} kWh</div>
+          </div>
+
+          <div className="bg-white p-4 rounded shadow">
+            <div className="text-xs text-gray-500">Periodo</div>
+            <div className="text-xl font-bold">{total2.toFixed(0)} kWh</div>
+          </div>
+
+          <div className={`p-4 rounded shadow ${diffKwh > 0 ? "bg-red-100" : "bg-green-100"}`}>
+            <div className="text-xs text-gray-500">Δ</div>
+            <div className="text-xl font-bold">{diffKwh.toFixed(0)} kWh</div>
+            <div>{diffPercent.toFixed(1)} %</div>
+          </div>
+
+        </div>
+      )}
+
+      {/* GRÁFICOS */}
+      {mode === "single" && <Chart data={data} />}
+
+      {mode === "compare" && (
+        <CompareChart data1={data1Agg} data2={data2Agg} />
+      )}
+
+    </div>
+
+  </main>
+);
