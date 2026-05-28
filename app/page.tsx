@@ -13,7 +13,12 @@ export default function Home() {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const hotels = [
+  { name: "Barcelona", file: "/data/hotel_barcelona.xlsx" },
+  { name: "Madrid", file: "/data/hotel_madrid.xlsx" },
+  { name: "Valencia", file: "/data/hotel_valencia.xlsx" },];
 
+  const [selectedHotel, setSelectedHotel] = useState("");
   const [startDate1, setStartDate1] = useState("");
   const [endDate1, setEndDate1] = useState("");
   const [startDate2, setStartDate2] = useState("");
