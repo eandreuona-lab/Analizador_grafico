@@ -143,7 +143,7 @@ export default function Home() {
 
   const data1Agg = aggregateData(data1, frequency);
   const data2Agg = aggregateData(data2, frequency);
-
+  const dataAgg = aggregateData(data, frequency);
   // =========================
   // KPIs
   // =========================
@@ -267,7 +267,7 @@ export default function Home() {
           </div>
         )}
 
-        {mode === "single" && <Chart data={data} />}
+        {mode === "single" && <Chart data={dataAgg} />}
         {mode === "compare" && <CompareChart data1={data1Agg} data2={data2Agg} />}
 
       </div>
