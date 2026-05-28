@@ -120,6 +120,11 @@ export default function Home() {
       : data;
 
   const dataAgg = aggregateData(dataCurve, frequency);
+  // ✅ CONSUMO TOTAL EN CURVE
+const totalCurve = dataCurve.reduce(
+  (acc, d) => acc + d.value,
+  0
+);
 
   // =========================
   // COMPARE
@@ -269,7 +274,38 @@ export default function Home() {
       {/* CONTENT */}
       <div className="p-6">
 
-        {mode === "single" && <Chart data={dataAgg} />}
+       {mode === "single" && (
+  <>
+    {/* ✅ KPI CURVE */}
+    <div className="grid grid-cols-1 mb-4">
+      <div className={`p-4 rounded ${
+        dark ? "bg-[#1e293b]" : "bg-white"
+      }`}>
+        <div className="text-xs text-gray-500">
+          Consumo periodo
+        </div>
+        <div className="text-xl font-bold">
+          {totalCurve.toFixed(0)} kWh
+        </div>
+      </div>
+    </div>
+
+    <Chart data={dataAgg} />
+  </>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
         {mode === "compare" && (
           <>
