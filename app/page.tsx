@@ -79,7 +79,8 @@ export default function Home() {
       <header className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
         <div className="w-full px-4 py-2 flex items-center gap-4">
 
-          /logo.png
+         <img src="/logo.png" alt="Ona Hotels" className="h-8 object-contain" />
+
 
           <div>
             <h1 className={`text-lg font-semibold ${dark ? "text-white" : "text-gray-800"}`}>
