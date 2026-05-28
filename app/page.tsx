@@ -11,6 +11,43 @@ import { useEffect } from "react";
 export default function Home() {
   const [data, setData] = useState([]);
 
+useEffect(() => {
+  if (!selectedHotel) return;
+
+  fetch(selectedHotel)
+    .then((res) => res.arrayBuffer())
+    .then((data) => {
+      const workbook = XLSX.read(data);
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const json = XLSX.utils.sheet_to_json(sheet);
+
+      // 👇 ADAPTACIÓN (IMPORTANTE)
+      const formatted = json.map((row: any) => ({
+        datetime: row.fecha,
+        value: row.consumo_kWh,
+      }));
+
+      setData(formatted);
+    });
+}, [selectedHotel]);
+``
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   const [mode, setMode] = useState("single");
   const [dark, setDark] = useState(false);
 
