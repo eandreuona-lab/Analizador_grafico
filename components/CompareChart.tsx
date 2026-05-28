@@ -2,49 +2,41 @@
 
 import ReactECharts from "echarts-for-react";
 
-function aggregateByHour(data: any[]) {
-  const hours: any = {};
-
-  data.forEach((d: any) => {
-    const h = new Date(d.datetime).getHours();
-    if (!hours[h]) hours[h] = [];
-    hours[h].push(d.value);
-  });
-
-  return Object.keys(hours).map((h) => {
-    const vals = hours[h];
-    const avg = vals.reduce((a: number, b: number) => a + b, 0) / vals.length;
-    return [Number(h), avg];
-  });
-}
-
 export default function CompareChart({ data1, data2 }: any) {
   const option = {
     tooltip: { trigger: "axis" },
+
     legend: { data: ["Periodo 1", "Periodo 2"] },
 
-    grid: {
-      top: 40,
-      bottom: 40,
-      left: 60,
-      right: 20,
+    xAxis: {
+      type: "time",   // ✅ CLAVE
+      name: "Fecha",
     },
 
-    xAxis: { type: "value", name: "Hora" },
-    yAxis: { type: "value", name: "kWh" },
+    yAxis: {
+      type: "value",
+      name: "kWh",
+    },
+
+    dataZoom: [
+      { type: "inside" },
+      { type: "slider" },
+    ],
 
     series: [
       {
         name: "Periodo 1",
         type: "line",
         smooth: true,
-        data: aggregateByHour(data1),
+        showSymbol: false,
+        data: data1.map((d: any) => [d.datetime, d.value]),
       },
       {
         name: "Periodo 2",
         type: "line",
         smooth: true,
-        data: aggregateByHour(data2),
+        showSymbol: false,
+        data: data2.map((d: any) => [d.datetime, d.value]),
       },
     ],
   };
@@ -56,3 +48,4 @@ export default function CompareChart({ data1, data2 }: any) {
     />
   );
 }
+``
