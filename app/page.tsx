@@ -24,10 +24,11 @@ useEffect(() => {
       const json = XLSX.utils.sheet_to_json(sheet);
 
       // 👇 ADAPTACIÓN (IMPORTANTE)
-      const formatted = json.map((row: any) => ({
-        datetime: row.fecha,
-        value: row.consumo_kWh,
-      }));
+     const formatted = json.map((row: any) => ({
+  datetime: `${row.fecha} ${row.hora}`,
+  value: row.consumo_kWh,
+}));
+``
 
       setData(formatted);
     });
