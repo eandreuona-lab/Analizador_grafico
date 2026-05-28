@@ -4,6 +4,9 @@ import { useState } from "react";
 import Upload from "@/components/Upload";
 import Chart from "@/components/Chart";
 import CompareChart from "@/components/CompareChart";
+import * as XLSX from "xlsx";
+import { useEffect } from "react";
+
 
 export default function Home() {
   const [data, setData] = useState([]);
