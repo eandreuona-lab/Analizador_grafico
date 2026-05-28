@@ -12,7 +12,7 @@ export default function Home() {
   // ESTADOS
   // =========================
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
 
   const [mode, setMode] = useState("single");
@@ -26,7 +26,16 @@ export default function Home() {
   const [baseDate, setBaseDate] = useState("");
   const [periodDate, setPeriodDate] = useState("");
 
-  
+  // =========================
+  // CARGA LISTA HOTELES (API)
+  // =========================
+
+  useEffect(() => {
+    fetch("/api/hotels")
+      .then((res) => res.json())
+      .then((data) => setHotels(data))
+      .catch((err) => console.error("Error cargando hoteles:", err));
+  }, []);
 
   // =========================
   // CARGA EXCEL
@@ -37,30 +46,27 @@ export default function Home() {
 
     fetch(selectedHotel)
       .then((res) => res.arrayBuffer())
-      .then((data) => {
-        const workbook = XLSX.read(data, { type: "array" });
+      .then((fileData) => {
+        const workbook = XLSX.read(fileData, { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet);
 
         const formatted = json.map((row: any) => ({
-          datetime: `${row.fecha} ${row.hora}`,
-          value: row.consumo_kWh,
+          datetime: new Date(`${row.fecha} ${row.hora}`).toISOString(),
+          value: Number(row.consumo_kWh) || 0,
         }));
 
+        // ✅ ORDENAR DATOS
+        formatted.sort(
+          (a, b) =>
+            new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+        );
+
         setData(formatted);
-      });
+      })
+      .catch((err) => console.error("Error cargando Excel:", err));
   }, [selectedHotel]);
 
-useEffect(() => {
-  fetch("/api/hotels")
-    .then((res) => res.json())
-    .then((data) => setHotels(data))
-    .catch((err) => console.error("Error cargando hoteles:", err));
-}, []);
-
-
-
-  
   // =========================
   // WINDOW
   // =========================
@@ -83,21 +89,21 @@ useEffect(() => {
   const periodRange = periodDate ? getWindowRange(periodDate, windowSize) : null;
 
   const data1 = baseRange
-    ? data.filter((d: any) => {
+    ? data.filter((d) => {
         const t = new Date(d.datetime);
         return t >= baseRange.start && t <= baseRange.end;
       })
     : [];
 
   const data2 = periodRange
-    ? data.filter((d: any) => {
+    ? data.filter((d) => {
         const t = new Date(d.datetime);
         return t >= periodRange.start && t <= periodRange.end;
       })
     : [];
 
   // =========================
-  // FREQUENCY (AGREGACIÓN)
+  // AGREGACIÓN FREQUENCY
   // =========================
 
   function aggregateData(data: any[], freq: string) {
@@ -121,8 +127,14 @@ useEffect(() => {
       }
 
       if (freq === "w") {
-        const week = Math.floor(date.getDate() / 7);
-        key = `${date.getFullYear()}-${date.getMonth()}-W${week}`;
+        const onejan = new Date(date.getFullYear(), 0, 1);
+        const week = Math.ceil(
+          (((date.getTime() - onejan.getTime()) / 86400000) +
+            onejan.getDay() +
+            1) /
+            7
+        );
+        key = `${date.getFullYear()}-W${week}`;
       }
 
       if (freq === "m") {
@@ -134,7 +146,7 @@ useEffect(() => {
     });
 
     return Object.values(groups).map((group: any) => ({
-     datetime: new Date(group[0].datetime),
+      datetime: new Date(group[0].datetime),
       value:
         group.reduce((a: number, b: any) => a + b.value, 0) / group.length,
     }));
@@ -144,53 +156,47 @@ useEffect(() => {
   const data2Agg = aggregateData(data2, frequency);
 
   // =========================
-  // KPIs
+  // KPIs (CORRECTOS)
   // =========================
 
-  // ✅ KPI CORRECTOS (datos reales)
+  const total1 = data1.reduce((acc, d) => acc + d.value, 0);
+  const total2 = data2.reduce((acc, d) => acc + d.value, 0);
 
-const total1 = data1.reduce((acc: number, d: any) => acc + d.value, 0);
-const total2 = data2.reduce((acc: number, d: any) => acc + d.value, 0);
+  const diffKwh = total2 - total1;
 
-const diffKwh = total2 - total1;
-
-const diffPercent =
-  total1 !== 0 ? (diffKwh / total1) * 100 : 0;
+  const diffPercent = total1 !== 0 ? (diffKwh / total1) * 100 : 0;
 
   // =========================
   // UI
   // =========================
 
-return (
-  <main className={`${dark ? "bg-[#0f172a] text-white" : "bg-gray-100"} min-h-screen`}>
+  return (
+    <main className={`${dark ? "bg-[#0f172a] text-white" : "bg-gray-100"} min-h-screen`}>
 
-    {/* ✅ HEADER */}
-    <header className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
-      <div className="flex items-center px-6 py-3 gap-4">
+      {/* HEADER */}
+      <header className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
+        <div className="flex items-center px-6 py-3 gap-4">
 
-        /logo.png
+          /logo.png
 
-        <div>
-          <h1 className="text-lg font-semibold">Ona Hotels Energy</h1>
-          <p className="text-xs text-gray-400">Energy analytics tool</p>
+          <div>
+            <h1 className="text-lg font-semibold">Ona Hotels Energy</h1>
+            <p className="text-xs text-gray-400">Energy analytics tool</p>
+          </div>
+
+          <button
+            onClick={() => setDark(!dark)}
+            className="ml-auto px-3 py-1 bg-gray-200 rounded"
+          >
+            {dark ? "Light" : "Dark"}
+          </button>
         </div>
+      </header>
 
-        <button
-          onClick={() => setDark(!dark)}
-          className="ml-auto px-3 py-1 bg-gray-200 rounded"
-        >
-          {dark ? "Light" : "Dark"}
-        </button>
-      </div>
-    </header>
+      {/* CONTROL PANEL */}
+      <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
+        <div className="flex flex-wrap gap-4 px-6 py-3 items-center text-sm">
 
-    {/* ✅ CONTROL PANEL (TIPO DEXMA) */}
-    <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
-      <div className="flex flex-wrap gap-4 px-6 py-3 items-center text-sm">
-
-        {/* DEVICE */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">Device</span>
           <select
             value={selectedHotel}
             onChange={(e) => setSelectedHotel(e.target.value)}
@@ -201,11 +207,6 @@ return (
               <option key={h.file} value={h.file}>{h.name}</option>
             ))}
           </select>
-        </div>
-
-        {/* FREQUENCY */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">Frequency</span>
 
           <div className="flex gap-1">
             {["30m", "h", "d", "w", "m"].map((f) => (
@@ -220,11 +221,6 @@ return (
               </button>
             ))}
           </div>
-        </div>
-
-        {/* WINDOW */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">Window</span>
 
           <select
             value={windowSize}
@@ -238,84 +234,46 @@ return (
             <option value="3m">3 meses</option>
             <option value="6m">6 meses</option>
           </select>
-        </div>
 
-        {/* BASE */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">Base</span>
-          <input
-            type="date"
-            value={baseDate}
-            onChange={(e) => setBaseDate(e.target.value)}
-            className="p-1 border rounded"
-          />
-        </div>
+          <input type="date" value={baseDate} onChange={(e) => setBaseDate(e.target.value)} className="p-1 border rounded" />
+          <input type="date" value={periodDate} onChange={(e) => setPeriodDate(e.target.value)} className="p-1 border rounded" />
 
-        {/* PERIOD */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">Period</span>
-          <input
-            type="date"
-            value={periodDate}
-            onChange={(e) => setPeriodDate(e.target.value)}
-            className="p-1 border rounded"
-          />
-        </div>
+          <div className="ml-auto flex gap-1">
+            <button onClick={() => setMode("single")} className={`px-2 py-1 rounded ${mode === "single" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>Curve</button>
+            <button onClick={() => setMode("compare")} className={`px-2 py-1 rounded ${mode === "compare" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>Compare</button>
+          </div>
 
-        {/* MODE TOGGLE */}
-        <div className="ml-auto flex gap-1">
-          <button
-            onClick={() => setMode("single")}
-            className={`px-2 py-1 rounded ${mode === "single" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-          >
-            Curve
-          </button>
-
-          <button
-            onClick={() => setMode("compare")}
-            className={`px-2 py-1 rounded ${mode === "compare" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-          >
-            Compare
-          </button>
         </div>
+      </div>
+
+      {/* CONTENIDO */}
+      <div className="p-6 space-y-4">
+
+        {mode === "compare" && (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded shadow">
+              <div className="text-xs text-gray-500">Base</div>
+              <div className="text-xl font-bold">{total1.toFixed(0)} kWh</div>
+            </div>
+
+            <div className="bg-white p-4 rounded shadow">
+              <div className="text-xs text-gray-500">Periodo</div>
+              <div className="text-xl font-bold">{total2.toFixed(0)} kWh</div>
+            </div>
+
+            <div className={`p-4 rounded shadow ${diffKwh > 0 ? "bg-red-100" : "bg-green-100"}`}>
+              <div className="text-xs text-gray-500">Δ</div>
+              <div className="text-xl font-bold">{diffKwh.toFixed(0)} kWh</div>
+              <div>{diffPercent.toFixed(1)} %</div>
+            </div>
+          </div>
+        )}
+
+        {mode === "single" && <Chart data={data} />}
+        {mode === "compare" && <CompareChart data1={data1Agg} data2={data2Agg} />}
 
       </div>
-    </div>
 
-    {/* ✅ CONTENIDO */}
-    <div className="p-6 space-y-4">
-
-      {/* KPIs SOLO EN COMPARACIÓN */}
-      {mode === "compare" && (
-        <div className="grid grid-cols-3 gap-4">
-
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-xs text-gray-500">Base</div>
-            <div className="text-xl font-bold">{total1.toFixed(0)} kWh</div>
-          </div>
-
-          <div className="bg-white p-4 rounded shadow">
-            <div className="text-xs text-gray-500">Periodo</div>
-            <div className="text-xl font-bold">{total2.toFixed(0)} kWh</div>
-          </div>
-
-          <div className={`p-4 rounded shadow ${diffKwh > 0 ? "bg-red-100" : "bg-green-100"}`}>
-            <div className="text-xs text-gray-500">Δ</div>
-            <div className="text-xl font-bold">{diffKwh.toFixed(0)} kWh</div>
-            <div>{diffPercent.toFixed(1)} %</div>
-          </div>
-
-        </div>
-      )}
-
-      {/* GRÁFICOS */}
-      {mode === "single" && <Chart data={data} />}
-
-      {mode === "compare" && (
-        <CompareChart data1={data1Agg} data2={data2Agg} />
-      )}
-
-    </div>
-
-  </main>
-);
+    </main>
+  );
+}
