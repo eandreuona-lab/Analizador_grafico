@@ -105,6 +105,36 @@ export default function Home() {
           </button>
         </div>
 
+
+{/* SELECTOR DE HOTEL */}
+<div className="flex items-center gap-2">
+
+  <label className="text-sm">
+    Hotel:
+  </label>
+
+  <select
+    value={selectedHotel}
+    onChange={(e) => setSelectedHotel(e.target.value)}
+    className={`p-2 border rounded ${
+      dark ? "bg-[#0f172a] text-white border-gray-600" : ""
+    }`}
+  >
+    <option value="">Selecciona hotel</option>
+
+    {hotels.map((h) => (
+      <option key={h.file} value={h.file}>
+        {h.name}
+      </option>
+    ))}
+
+  </select>
+
+</div>
+
+
+
+        
         {/* UPLOAD + RESET */}
         <div className={`${dark ? "bg-[#1e293b] border-gray-700" : "bg-white"} p-2 rounded border flex items-center`}>
 
