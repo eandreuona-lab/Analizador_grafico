@@ -42,10 +42,9 @@ export default function Home() {
   const [endDate, setEndDate] = useState("");
 
   const hotels = [
-    { name: "Barcelona", file: "/data/hotel_barcelona.xlsx" },
-    { name: "Madrid", file: "/data/hotel_madrid.xlsx" },
-    { name: "Valencia", file: "/data/hotel_valencia.xlsx" },
-  ];
+  { name: "PALAMOS", file: "/data/PALAMOS.xlsx" },
+  { name: "OFICINAS CALABRIA", file: "/data/OFICINAS_CALABRIA.xlsx" },
+];
 
   const [startDate1, setStartDate1] = useState("");
   const [endDate1, setEndDate1] = useState("");
