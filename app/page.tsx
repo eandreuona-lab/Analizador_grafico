@@ -126,7 +126,7 @@ export default function Home() {
     });
 
     return Object.values(groups).map((group: any) => ({
-      datetime: group[0].datetime,
+     datetime: new Date(group[0].datetime),
       value:
         group.reduce((a: number, b: any) => a + b.value, 0) / group.length,
     }));
