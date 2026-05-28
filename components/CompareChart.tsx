@@ -2,14 +2,31 @@
 
 import ReactECharts from "echarts-for-react";
 
+// ✅ NORMALIZAR FECHAS (SUPERPONER PERIODOS)
+function normalizeDate(dateStr: string) {
+  const d = new Date(dateStr);
+
+  return new Date(
+    2000, // mismo año para todos → clave
+    d.getMonth(),
+    d.getDate(),
+    d.getHours(),
+    d.getMinutes()
+  );
+}
+
 export default function CompareChart({ data1, data2 }: any) {
   const option = {
-    tooltip: { trigger: "axis" },
+    tooltip: {
+      trigger: "axis",
+    },
 
-    legend: { data: ["Periodo 1", "Periodo 2"] },
+    legend: {
+      data: ["Periodo 1", "Periodo 2"],
+    },
 
     xAxis: {
-      type: "time",   // ✅ CLAVE
+      type: "time",
       name: "Fecha",
     },
 
@@ -18,6 +35,7 @@ export default function CompareChart({ data1, data2 }: any) {
       name: "kWh",
     },
 
+    // ✅ ZOOM COMO EN CURVA
     dataZoom: [
       { type: "inside" },
       { type: "slider" },
@@ -29,14 +47,20 @@ export default function CompareChart({ data1, data2 }: any) {
         type: "line",
         smooth: true,
         showSymbol: false,
-        data: data1.map((d: any) => [d.datetime, d.value]),
+        data: data1.map((d: any) => [
+          normalizeDate(d.datetime),
+          d.value,
+        ]),
       },
       {
         name: "Periodo 2",
         type: "line",
         smooth: true,
         showSymbol: false,
-        data: data2.map((d: any) => [d.datetime, d.value]),
+        data: data2.map((d: any) => [
+          normalizeDate(d.datetime),
+          d.value,
+        ]),
       },
     ],
   };
@@ -48,4 +72,3 @@ export default function CompareChart({ data1, data2 }: any) {
     />
   );
 }
-``
