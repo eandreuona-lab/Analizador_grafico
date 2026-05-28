@@ -274,19 +274,23 @@ const totalCurve = dataCurve.reduce(
       {/* CONTENT */}
       <div className="p-6">
 
-       {mode === "single" && (
+{mode === "single" && (
   <>
     {/* ✅ KPI CURVE */}
-    <div className="grid grid-cols-1 mb-4">
-      <div className={`p-4 rounded ${
-        dark ? "bg-[#1e293b]" : "bg-white"
-      }`}>
-        <div className="text-xs text-gray-500">
-          Consumo periodo
-        </div>
-        <div className="text-xl font-bold">
-          {totalCurve.toFixed(0)} kWh
-        </div>
+    <div
+      style={{
+        background: dark ? "#1e293b" : "#ffffff",
+        padding: "16px",
+        marginBottom: "16px",
+        borderRadius: "8px",
+      }}
+    >
+      <div style={{ fontSize: "12px", color: dark ? "#ccc" : "#666" }}>
+        Consumo periodo
+      </div>
+
+      <div style={{ fontSize: "20px", fontWeight: "bold" }}>
+        {totalCurve.toFixed(0)} kWh
       </div>
     </div>
 
