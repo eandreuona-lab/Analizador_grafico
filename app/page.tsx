@@ -17,7 +17,7 @@ useEffect(() => {
   fetch(selectedHotel)
     .then((res) => res.arrayBuffer())
     .then((data) => {
-      const workbook = XLSX.read(data);
+      const workbook = XLSX.read(data, { type: "array" });
 
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
