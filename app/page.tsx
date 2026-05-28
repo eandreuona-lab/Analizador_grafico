@@ -13,6 +13,7 @@ export default function Home() {
   // =========================
 
   const [data, setData] = useState([]);
+  const [hotels, setHotels] = useState<any[]>([]);
 
   const [mode, setMode] = useState("single");
   const [dark, setDark] = useState(false);
@@ -25,10 +26,7 @@ export default function Home() {
   const [baseDate, setBaseDate] = useState("");
   const [periodDate, setPeriodDate] = useState("");
 
-  const hotels = [
-    { name: "PALAMOS", file: "/data/PALAMOS.xlsx" },
-    { name: "OFICINAS CALABRIA", file: "/data/OFICINAS_CALABRIA.xlsx" },
-  ];
+  
 
   // =========================
   // CARGA EXCEL
@@ -53,6 +51,16 @@ export default function Home() {
       });
   }, [selectedHotel]);
 
+useEffect(() => {
+  fetch("/api/hotels")
+    .then((res) => res.json())
+    .then((data) => setHotels(data))
+    .catch((err) => console.error("Error cargando hoteles:", err));
+}, []);
+
+
+
+  
   // =========================
   // WINDOW
   // =========================
