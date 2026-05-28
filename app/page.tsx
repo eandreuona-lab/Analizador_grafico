@@ -12,19 +12,30 @@ export default function Home() {
 
   const [selectedHotel, setSelectedHotel] = useState("");
 
-  // ✅ CARGA AUTOMÁTICA DEL EXCEL
+  const [frequency, setFrequency] = useState("h");
+
+  const [windowSize, setWindowSize] = useState("1m");
+  const [baseDate, setBaseDate] = useState("");
+  const [periodDate, setPeriodDate] = useState("");
+
+  const [mode, setMode] = useState("compare");
+
+  // ✅ HOTELS
+  const hotels = [
+    { name: "PALAMOS", file: "/data/PALAMOS.xlsx" },
+    { name: "OFICINAS CALABRIA", file: "/data/OFICINAS_CALABRIA.xlsx" },
+  ];
+
+  // ✅ CARGA EXCEL
   useEffect(() => {
-    if (!selectedHotel || typeof window === "undefined") return;
+    if (!selectedHotel) return;
 
     fetch(selectedHotel)
       .then((res) => res.arrayBuffer())
       .then((data) => {
         const workbook = XLSX.read(data, { type: "array" });
-
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet);
-
-        console.log(json);
 
         const formatted = json.map((row: any) => ({
           datetime: `${row.fecha} ${row.hora}`,
@@ -35,180 +46,158 @@ export default function Home() {
       });
   }, [selectedHotel]);
 
-  const [mode, setMode] = useState("single");
-  const [dark, setDark] = useState(false);
+  // ✅ WINDOW RANGE
+  function getWindowRange(start: string, windowSize: string) {
+    const d = new Date(start);
+    const end = new Date(d);
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+    if (windowSize === "1d") end.setDate(d.getDate() + 1);
+    if (windowSize === "1w") end.setDate(d.getDate() + 7);
+    if (windowSize === "15d") end.setDate(d.getDate() + 15);
+    if (windowSize === "1m") end.setMonth(d.getMonth() + 1);
+    if (windowSize === "3m") end.setMonth(d.getMonth() + 3);
+    if (windowSize === "6m") end.setMonth(d.getMonth() + 6);
 
-  const hotels = [
-  { name: "PALAMOS", file: "/data/PALAMOS.xlsx" },
-  { name: "OFICINAS CALABRIA", file: "/data/OFICINAS_CALABRIA.xlsx" },
-];
+    return { start: d, end };
+  }
 
-  const [startDate1, setStartDate1] = useState("");
-  const [endDate1, setEndDate1] = useState("");
-  const [startDate2, setStartDate2] = useState("");
-  const [endDate2, setEndDate2] = useState("");
+  const baseRange = baseDate ? getWindowRange(baseDate, windowSize) : null;
+  const periodRange = periodDate ? getWindowRange(periodDate, windowSize) : null;
 
-  const filteredData = data.filter((d: any) => {
-    const t = new Date(d.datetime).getTime();
-    if (startDate && t < new Date(startDate).getTime()) return false;
-    if (endDate && t > new Date(endDate).getTime()) return false;
-    return true;
-  });
+  const data1 = baseRange
+    ? data.filter((d: any) => {
+        const t = new Date(d.datetime);
+        return t >= baseRange.start && t <= baseRange.end;
+      })
+    : [];
 
-  const data1 = data.filter((d: any) => {
-    const t = new Date(d.datetime).getTime();
-    if (startDate1 && t < new Date(startDate1).getTime()) return false;
-    if (endDate1 && t > new Date(endDate1).getTime()) return false;
-    return true;
-  });
+  const data2 = periodRange
+    ? data.filter((d: any) => {
+        const t = new Date(d.datetime);
+        return t >= periodRange.start && t <= periodRange.end;
+      })
+    : [];
 
-  const data2 = data.filter((d: any) => {
-    const t = new Date(d.datetime).getTime();
-    if (startDate2 && t < new Date(startDate2).getTime()) return false;
-    if (endDate2 && t > new Date(endDate2).getTime()) return false;
-    return true;
-  });
+  // ✅ AGREGACIÓN (FREQUENCY)
+  function aggregateData(data: any[], freq: string) {
+    const groups: any = {};
+
+    data.forEach((d) => {
+      const date = new Date(d.datetime);
+      let key;
+
+      if (freq === "h") {
+        key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+      }
+
+      if (freq === "30m") {
+        const m = date.getMinutes() < 30 ? "00" : "30";
+        key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}:${m}`;
+      }
+
+      if (freq === "d") {
+        key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      }
+
+      if (freq === "w") {
+        const week = Math.floor(date.getDate() / 7);
+        key = `${date.getFullYear()}-${date.getMonth()}-W${week}`;
+      }
+
+      if (freq === "m") {
+        key = `${date.getFullYear()}-${date.getMonth()}`;
+      }
+
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(d);
+    });
+
+    return Object.values(groups).map((group: any) => {
+      const avg =
+        group.reduce((a: number, b: any) => a + b.value, 0) / group.length;
+
+      return {
+        datetime: group[0].datetime,
+        value: avg,
+      };
+    });
+  }
+
+  const data1Agg = aggregateData(data1, frequency);
+  const data2Agg = aggregateData(data2, frequency);
 
   return (
-    <main className={`min-h-screen font-sans ${dark ? "bg-[#0f172a] text-white" : "bg-[#f4f6f8]"}`}>
+    <main className="p-4 space-y-4">
 
-      {/* HEADER */}
-      <header className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
-        <div className="w-full px-4 py-2 flex items-center gap-4">
+      {/* SELECTORES SUPERIORES */}
+      <div className="flex gap-4 flex-wrap">
 
-         <img src="/logo.png" alt="Ona Hotels" className="h-8 object-contain" />
+        {/* HOTEL */}
+        <select
+          value={selectedHotel}
+          onChange={(e) => setSelectedHotel(e.target.value)}
+          className="p-2 border rounded"
+        >
+          <option value="">Selecciona hotel</option>
+          {hotels.map((h) => (
+            <option key={h.file} value={h.file}>
+              {h.name}
+            </option>
+          ))}
+        </select>
 
-
-          <div>
-            <h1 className={`text-lg font-semibold ${dark ? "text-white" : "text-gray-800"}`}>
-              Ona Hotels Energy
-            </h1>
-            <p className={`text-xs ${dark ? "text-gray-300" : "text-gray-400"}`}>
-              Analizador de curvas de consumo eléctrico
-            </p>
-          </div>
-
-          <button
-            onClick={() => setDark(!dark)}
-            className={`ml-auto px-3 py-1 text-sm rounded ${
-              dark
-                ? "bg-gray-700 text-white hover:bg-gray-600"
-                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-            }`}
-          >
-            {dark ? "Modo claro" : "Modo dark"}
-          </button>
-
-        </div>
-      </header>
-
-      <div className="w-full px-4 py-3 space-y-3">
-
-        {/* MODO */}
-        <div className="flex gap-2">
-          <button onClick={() => setMode("single")}
-            className={`px-3 py-1 rounded text-sm ${
-              mode === "single" ? "bg-[#00a6a8] text-white" : "bg-gray-200 text-gray-700"
-            }`}>
-            Curva
-          </button>
-
-          <button onClick={() => setMode("compare")}
-            className={`px-3 py-1 rounded text-sm ${
-              mode === "compare" ? "bg-[#00a6a8] text-white" : "bg-gray-200 text-gray-700"
-            }`}>
-            Comparación
-          </button>
+        {/* FREQUENCY */}
+        <div className="flex gap-1">
+          {["30m", "h", "d", "w", "m"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFrequency(f)}
+              className={`px-2 py-1 rounded ${
+                frequency === f
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
         </div>
 
-        {/* SELECTOR */}
-        <div className="flex items-center gap-2 text-sm">
-          <label>Hotel:</label>
-          <select
-            value={selectedHotel}
-            onChange={(e) => setSelectedHotel(e.target.value)}
-            className={`p-2 border rounded ${dark ? "bg-[#0f172a] text-white border-gray-600" : ""}`}
-          >
-            <option value="">Selecciona hotel</option>
-            {hotels.map((h) => (
-              <option key={h.file} value={h.file}>{h.name}</option>
-            ))}
-          </select>
-        </div>
+        {/* WINDOW */}
+        <select
+          value={windowSize}
+          onChange={(e) => setWindowSize(e.target.value)}
+          className="p-2 border rounded"
+        >
+          <option value="1d">1 día</option>
+          <option value="1w">1 semana</option>
+          <option value="15d">15 días</option>
+          <option value="1m">1 mes</option>
+          <option value="3m">3 meses</option>
+          <option value="6m">6 meses</option>
+        </select>
 
-        {/* CURVA */}
-        {mode === "single" && (
-          <>
-            <div className="flex gap-2 text-sm">
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                className={`p-1 border rounded ${dark ? "bg-[#0f172a] border-gray-600 text-white" : ""}`} />
-
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                className={`p-1 border rounded ${dark ? "bg-[#0f172a] border-gray-600 text-white" : ""}`} />
-            </div>
-
-            <Chart data={filteredData} />
-          </>
-        )}
-
-      {mode === "compare" && (
-  <>
-    <div className="grid md:grid-cols-2 gap-3 text-sm">
-
-      <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} p-2 rounded border`}>
-        <h3 className="mb-1">Periodo 1</h3>
-
+        {/* BASE */}
         <input
           type="date"
-          value={startDate1}
-          onChange={(e) => setStartDate1(e.target.value)}
-          className={`p-1 border rounded w-full ${
-            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
-          }`}
+          value={baseDate}
+          onChange={(e) => setBaseDate(e.target.value)}
+          className="p-2 border rounded"
         />
 
+        {/* PERIOD 1 */}
         <input
           type="date"
-          value={endDate1}
-          onChange={(e) => setEndDate1(e.target.value)}
-          className={`p-1 border rounded w-full mt-1 ${
-            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
-          }`}
+          value={periodDate}
+          onChange={(e) => setPeriodDate(e.target.value)}
+          className="p-2 border rounded"
         />
+
       </div>
 
-      <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} p-2 rounded border`}>
-        <h3 className="mb-1">Periodo 2</h3>
+      {/* GRÁFICO */}
+      <CompareChart data1={data1Agg} data2={data2Agg} />
 
-        <input
-          type="date"
-          value={startDate2}
-          onChange={(e) => setStartDate2(e.target.value)}
-          className={`p-1 border rounded w-full ${
-            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
-          }`}
-        />
-
-        <input
-          type="date"
-          value={endDate2}
-          onChange={(e) => setEndDate2(e.target.value)}
-          className={`p-1 border rounded w-full mt-1 ${
-            dark ? "bg-[#0f172a] text-white border-gray-600" : ""
-          }`}
-        />
-      </div>
-
-    </div>
-
-    <CompareChart data1={data1} data2={data2} />
-  </>
-)}
-
-      </div>
     </main>
   );
 }
