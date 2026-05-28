@@ -15,7 +15,6 @@ export default function Home() {
   const [dark, setDark] = useState(false);
 
   const [selectedHotel, setSelectedHotel] = useState("");
-
   const [frequency, setFrequency] = useState("h");
 
   const [windowSize, setWindowSize] = useState("1m");
@@ -23,7 +22,7 @@ export default function Home() {
   const [periodDate, setPeriodDate] = useState("");
 
   // =========================
-  // HOTELES (AUTOLOAD)
+  // LOAD HOTELS
   // =========================
   useEffect(() => {
     fetch("/api/hotels")
@@ -59,12 +58,11 @@ export default function Home() {
         );
 
         setData(formatted);
-      })
-      .catch(() => console.error("Error cargando Excel"));
+      });
   }, [selectedHotel]);
 
   // =========================
-  // WINDOW
+  // WINDOW (SOLO COMPARE)
   // =========================
   function getWindowRange(start: string, windowSize: string) {
     const d = new Date(start);
@@ -98,7 +96,7 @@ export default function Home() {
     : [];
 
   // =========================
-  // AGREGACIÓN
+  // AGGREGATION
   // =========================
   function aggregateData(data: any[], freq: string) {
     const groups: any = {};
@@ -133,19 +131,19 @@ export default function Home() {
       groups[key].push(d);
     });
 
-    
-return Object.values(groups).map((group: any) => ({
-  datetime: group[0].datetime,
-
+    return Object.values(groups).map((group: any) => ({
+      datetime: group[0].datetime, // ✅ IMPORTANTE (string, no Date)
       value:
         group.reduce((a: number, b: any) => a + b.value, 0) /
         group.length,
     }));
   }
 
+  // ✅ DATA CORRECTA
+  const dataAgg = aggregateData(data, frequency);
   const data1Agg = aggregateData(data1, frequency);
   const data2Agg = aggregateData(data2, frequency);
-  const dataAgg = aggregateData(data, frequency);
+
   // =========================
   // KPIs
   // =========================
@@ -164,9 +162,7 @@ return Object.values(groups).map((group: any) => ({
       {/* HEADER */}
       <header className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
         <div className="flex items-center px-6 py-3 gap-4">
-
           <img src="/logo.png" width={40} />
-
           <div>
             <h1 className="text-lg font-semibold">Ona Hotels Energy</h1>
             <p className="text-xs text-gray-400">Energy analytics tool</p>
@@ -181,7 +177,7 @@ return Object.values(groups).map((group: any) => ({
         </div>
       </header>
 
-      {/* CONTROL */}
+      {/* CONTROLES */}
       <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} border-b`}>
         <div className="flex flex-wrap gap-4 px-6 py-3 items-center text-sm">
 
@@ -203,7 +199,9 @@ return Object.values(groups).map((group: any) => ({
                 key={f}
                 onClick={() => setFrequency(f)}
                 className={`px-2 py-1 rounded ${
-                  frequency === f ? "bg-green-500 text-white" : "bg-gray-200 text-black"
+                  frequency === f
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200 text-black"
                 }`}
               >
                 {f}
@@ -211,29 +209,46 @@ return Object.values(groups).map((group: any) => ({
             ))}
           </div>
 
-          {/* WINDOW */}
-          <select
-            value={windowSize}
-            onChange={(e) => setWindowSize(e.target.value)}
-            className="p-1 border rounded text-black"
-          >
-            <option value="1d">1 día</option>
-            <option value="1w">1 semana</option>
-            <option value="15d">15 días</option>
-            <option value="1m">1 mes</option>
-            <option value="3m">3 meses</option>
-            <option value="6m">6 meses</option>
-          </select>
+          {/* WINDOW SOLO EN COMPARE */}
+          {mode === "compare" && (
+            <>
+              <select
+                value={windowSize}
+                onChange={(e) => setWindowSize(e.target.value)}
+                className="p-1 border rounded text-black"
+              >
+                <option value="1d">1 día</option>
+                <option value="1w">1 semana</option>
+                <option value="15d">15 días</option>
+                <option value="1m">1 mes</option>
+                <option value="3m">3 meses</option>
+                <option value="6m">6 meses</option>
+              </select>
 
-          <input type="date" value={baseDate} onChange={(e) => setBaseDate(e.target.value)} className="p-1 border rounded text-black"/>
-          <input type="date" value={periodDate} onChange={(e) => setPeriodDate(e.target.value)} className="p-1 border rounded text-black"/>
+              <input
+                type="date"
+                value={baseDate}
+                onChange={(e) => setBaseDate(e.target.value)}
+                className="p-1 border rounded text-black"
+              />
+
+              <input
+                type="date"
+                value={periodDate}
+                onChange={(e) => setPeriodDate(e.target.value)}
+                className="p-1 border rounded text-black"
+              />
+            </>
+          )}
 
           {/* MODE */}
           <div className="ml-auto flex gap-1">
             <button
               onClick={() => setMode("single")}
               className={`px-3 py-1 rounded ${
-                mode === "single" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                mode === "single"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-black"
               }`}
             >
               Curve
@@ -242,7 +257,9 @@ return Object.values(groups).map((group: any) => ({
             <button
               onClick={() => setMode("compare")}
               className={`px-3 py-1 rounded ${
-                mode === "compare" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                mode === "compare"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-black"
               }`}
             >
               Compare
@@ -257,14 +274,14 @@ return Object.values(groups).map((group: any) => ({
 
         {mode === "compare" && (
           <div className="grid grid-cols-3 gap-4">
-            <div className={`p-3 rounded ${dark ? "bg-[#1e293b]" : "bg-white"}`}>
+            <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} p-4 rounded`}>
               Base: {total1.toFixed(0)} kWh
             </div>
-            <div className={`p-3 rounded ${dark ? "bg-[#1e293b]" : "bg-white"}`}>
+            <div className={`${dark ? "bg-[#1e293b]" : "bg-white"} p-4 rounded`}>
               Periodo: {total2.toFixed(0)} kWh
             </div>
-            <div className={`p-3 rounded ${diffKwh > 0 ? "bg-red-200" : "bg-green-200"}`}>
-              {diffKwh.toFixed(0)} kWh ({diffPercent.toFixed(1)} %)
+            <div className={`p-4 rounded ${diffKwh > 0 ? "bg-red-200" : "bg-green-200"}`}>
+              {diffKwh.toFixed(0)} kWh ({diffPercent.toFixed(1)}%)
             </div>
           </div>
         )}
