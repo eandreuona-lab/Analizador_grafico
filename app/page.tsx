@@ -139,11 +139,15 @@ export default function Home() {
   // KPIs
   // =========================
 
-  const total1 = data1Agg.reduce((acc: number, d: any) => acc + d.value, 0);
-  const total2 = data2Agg.reduce((acc: number, d: any) => acc + d.value, 0);
+  // ✅ KPI CORRECTOS (datos reales)
 
-  const diffKwh = total2 - total1;
-  const diffPercent = total1 !== 0 ? (diffKwh / total1) * 100 : 0;
+const total1 = data1.reduce((acc: number, d: any) => acc + d.value, 0);
+const total2 = data2.reduce((acc: number, d: any) => acc + d.value, 0);
+
+const diffKwh = total2 - total1;
+
+const diffPercent =
+  total1 !== 0 ? (diffKwh / total1) * 100 : 0;
 
   // =========================
   // UI
