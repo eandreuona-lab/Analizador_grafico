@@ -12,27 +12,30 @@ import { useEffect } from "react";
 export default function Home() {
   const [data, setData] = useState([]);
 
-useEffect(() => {
-  if (!selectedHotel) return;
+  const [selectedHotel, setSelectedHotel] = useState("");
 
-  fetch(selectedHotel)
-    .then((res) => res.arrayBuffer())
-    .then((data) => {
-      const workbook = XLSX.read(data, { type: "array" });
+  useEffect(() => {
+    if (!selectedHotel || typeof window === "undefined") return;
 
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet);
+    fetch(selectedHotel)
+      .then((res) => res.arrayBuffer())
+      .then((data) => {
+        const workbook = XLSX.read(data, { type: "array" });
 
-      console.log(json); // 👈 para debug
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
 
-      const formatted = json.map((row: any) => ({
-        datetime: `${row.fecha} ${row.hora}`,
-        value: row.consumo_kWh,
-      }));
+        console.log(json);
 
-      setData(formatted);
-    });
-}, [selectedHotel]);
+        const formatted = json.map((row: any) => ({
+          datetime: `${row.fecha} ${row.hora}`,
+          value: row.consumo_kWh,
+        }));
+
+        setData(formatted);
+      });
+  }, [selectedHotel]);
+
 
 ``
 
