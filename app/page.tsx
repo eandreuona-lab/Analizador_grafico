@@ -20,19 +20,19 @@ useEffect(() => {
       const workbook = XLSX.read(data, { type: "array" });
 
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
       const json = XLSX.utils.sheet_to_json(sheet);
 
-      // 👇 ADAPTACIÓN (IMPORTANTE)
-     const formatted = json.map((row: any) => ({
-  datetime: `${row.fecha} ${row.hora}`,
-  value: row.consumo_kWh,
-}));
-``
+      console.log(json); // 👈 para debug
+
+      const formatted = json.map((row: any) => ({
+        datetime: `${row.fecha} ${row.hora}`,
+        value: row.consumo_kWh,
+      }));
 
       setData(formatted);
     });
 }, [selectedHotel]);
+
 ``
 
 
