@@ -67,42 +67,59 @@ export default function Home() {
 // ✅ LOAD EXCEL GRADOS DÍA
 // =========================
 useEffect(() => {
-  fetch("/data/GD_PALAMOS.xlsx")
-    .then((res) => res.arrayBuffer())
+  if (!selectedHotel) return;
+
+  // ✅ obtener nombre del hotel desde el archivo seleccionado
+  const fileName = selectedHotel.split("/").pop();
+  if (!fileName) return;
+
+  const hotelName = fileName.replace(".xlsx", "");
+
+  const url = `/data/climate/GD_${hotelName}.xlsx`;
+
+  console.log("Cargando GD desde:", url); // ✅ debug útil
+
+  fetch(url)
+    .then((res) => {
+      if (!res.ok) {
+        console.error("Error cargando GD:", res.status);
+        return null;
+      }
+      return res.arrayBuffer();
+    })
     .then((fileData) => {
+      if (!fileData) return;
+
       const workbook = XLSX.read(fileData, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet);
 
+      const formatted = json.map((row: any) => {
+        let date;
 
-const formatted = json.map((row: any) => {
-  let date;
+        // ✅ Caso Excel (número)
+        if (typeof row["Date"] === "number") {
+          const excelDate = row["Date"];
+          const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
+          date = jsDate.toISOString();
+        }
 
-  // ✅ Si la fecha viene como número (Excel real)
-  if (typeof row["Date"] === "number") {
-    const excelDate = row["Date"];
-    const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
-    date = jsDate.toISOString();
-  }
+        // ✅ Caso texto (DD/MM/YYYY O MM/DD/YYYY → tu Excel es DD/MM)
+        else if (typeof row["Date"] === "string") {
+          const [day, month, year] = row["Date"].trim().split("/");
+          date = new Date(`${year}-${month}-${day}`).toISOString();
+        }
 
-  // ✅ Si viene como string (texto)
-  else if (typeof row["Date"] === "string") {
-    const [month, day, year] = row["Date"].split("/");
-    date = new Date(`${year}-${month}-${day}`).toISOString();
-  }
-
-  return {
-    date,
-    value: Number(row["GRADOS DÍA"]) || 0,
-  };
-});
-
-     
-``
+        return {
+          date,
+          value: Number(row["GRADOS DÍA"]) || 0,
+        };
+      });
 
       setGdData(formatted);
     });
-}, []);
+}, [selectedHotel]);
+
 
   // =========================
   // AGGREGATION
