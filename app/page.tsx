@@ -74,14 +74,30 @@ useEffect(() => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet);
 
-    const formatted = json.map((row: any) => {
-  const [month, day, year] = row["Date"].split("/");
+
+const formatted = json.map((row: any) => {
+  let date;
+
+  // ✅ Si la fecha viene como número (Excel real)
+  if (typeof row["Date"] === "number") {
+    const excelDate = row["Date"];
+    const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
+    date = jsDate.toISOString();
+  }
+
+  // ✅ Si viene como string (texto)
+  else if (typeof row["Date"] === "string") {
+    const [month, day, year] = row["Date"].split("/");
+    date = new Date(`${year}-${month}-${day}`).toISOString();
+  }
 
   return {
-    date: new Date(`${year}-${month}-${day}`).toISOString(),
+    date,
     value: Number(row["GRADOS DÍA"]) || 0,
   };
 });
+
+     
 ``
 
       setGdData(formatted);
