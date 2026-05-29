@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 export async function GET() {
-  const dirPath = path.join(process.cwd(), "public/data");
+  const dirPath = path.join(process.cwd(), "public/data/consumption");
 
   const files = fs.readdirSync(dirPath);
 
@@ -11,9 +11,6 @@ export async function GET() {
     .filter((file) => file.endsWith(".xlsx"))
     .map((file) => ({
       name: file.replace(".xlsx", "").replace(/_/g, " "),
-      file: `/data/${file}`,
+      file: `/data/consumption/${file}`,
     }));
 
-  return NextResponse.json(hotels);
-}
-``
