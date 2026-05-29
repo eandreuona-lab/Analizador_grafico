@@ -10,7 +10,7 @@ export default function Home() {
 
   const [data, setData] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
-
+  const [gdData, setGdData] = useState<any[]>([]);
   const [mode, setMode] = useState("single");
   const [dark, setDark] = useState(false);
 
@@ -60,6 +60,28 @@ export default function Home() {
         setData(formatted);
       });
   }, [selectedHotel]);
+
+
+
+// =========================
+// ✅ LOAD EXCEL GRADOS DÍA
+// =========================
+useEffect(() => {
+  fetch("/data/GD_PALAMOS.xlsx")
+    .then((res) => res.arrayBuffer())
+    .then((fileData) => {
+      const workbook = XLSX.read(fileData, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+
+      const formatted = json.map((row: any) => ({
+        date: new Date(row["Date"]).toISOString(),
+        value: Number(row["GRADOS DÍA"]) || 0,
+      }));
+
+      setGdData(formatted);
+    });
+}, []);
 
   // =========================
   // AGGREGATION
@@ -160,6 +182,25 @@ const totalCurve = dataCurve.reduce(
       })
     : [];
 
+
+// ✅ GRADOS DÍA - FILTRO IGUAL QUE CONSUMO
+
+const gd1 = baseRange
+  ? gdData.filter((d) => {
+      const t = new Date(d.date);
+      return t >= baseRange.start && t <= baseRange.end;
+    })
+  : [];
+
+const gd2 = periodRange
+  ? gdData.filter((d) => {
+      const t = new Date(d.date);
+      return t >= periodRange.start && t <= periodRange.end;
+    })
+  : [];
+
+
+  
   const data1Agg = aggregateData(data1, frequency);
   const data2Agg = aggregateData(data2, frequency);
 
@@ -169,6 +210,19 @@ const totalCurve = dataCurve.reduce(
   const total1 = data1.reduce((acc, d) => acc + d.value, 0);
   const total2 = data2.reduce((acc, d) => acc + d.value, 0);
 
+// ✅ GRADOS DÍA (SUMA)
+const totalGD1 = gd1.reduce((acc, d) => acc + d.value, 0);
+const totalGD2 = gd2.reduce((acc, d) => acc + d.value, 0);
+
+// ✅ DIFERENCIA
+const diffGD = totalGD2 - totalGD1;
+
+// ✅ PORCENTAJE
+const diffGDPercent =
+  totalGD1 !== 0 ? (diffGD / totalGD1) * 100 : 0;
+
+
+ 
   const diffKwh = total2 - total1;
   const diffPercent = total1 !== 0 ? (diffKwh / total1) * 100 : 0;
 
@@ -318,6 +372,30 @@ const totalCurve = dataCurve.reduce(
               <div className="bg-white p-3 rounded">Periodo: {total2.toFixed(0)} kWh</div>
               <div className="bg-green-100 p-3 rounded">{diffKwh.toFixed(0)} kWh ({diffPercent.toFixed(1)}%)</div>
             </div>
+
+
+{/* ✅ GRADOS DÍA */}
+<div className="grid grid-cols-3 gap-4 mb-4">
+
+  <div className="bg-yellow-100 p-3 rounded font-medium">
+    GD {totalGD1.toFixed(1)}
+  </div>
+
+  <div className="bg-yellow-100 p-3 rounded font-medium">
+    GD {totalGD2.toFixed(1)}
+  </div>
+
+  <div
+    className={`p-3 rounded font-medium ${
+      diffGD < 0 ? "bg-green-100" : "bg-red-100"
+    }`}
+  >
+    {diffGD.toFixed(1)} ({diffGDPercent.toFixed(1)}%)
+  </div>
+
+</div>
+
+           
 
             <CompareChart data1={data1Agg} data2={data2Agg} />
           </>
