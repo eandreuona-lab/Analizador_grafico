@@ -192,14 +192,15 @@ const totalCurve = dataCurve.reduce(
   const data1 = baseRange
     ? data.filter((d) => {
         const t = new Date(d.datetime);
-        return t >= baseRange.start && t <= baseRange.end;
+        return t >= baseRange.start && t < baseRange.end;
+
       })
     : [];
 
   const data2 = periodRange
     ? data.filter((d) => {
         const t = new Date(d.datetime);
-        return t >= periodRange.start && t <= periodRange.end;
+        return t >= periodRange.start && t < periodRange.end;
       })
     : [];
 
@@ -209,14 +210,14 @@ const totalCurve = dataCurve.reduce(
 const gd1 = baseRange
   ? gdData.filter((d) => {
       const t = new Date(d.date);
-      return t >= baseRange.start && t <= baseRange.end;
+      return t >= baseRange.start && t < baseRange.end;
     })
   : [];
 
 const gd2 = periodRange
   ? gdData.filter((d) => {
       const t = new Date(d.date);
-      return t >= periodRange.start && t <= periodRange.end;
+      return t >= periodRange.start && t < periodRange.end;
     })
   : [];
 
