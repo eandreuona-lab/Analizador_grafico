@@ -14,3 +14,4 @@ export async function GET() {
       file: `/data/consumption/${file}`,
     }));
 
+  return NextResponse.json(hot
