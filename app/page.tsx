@@ -74,12 +74,15 @@ useEffect(() => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet);
 
-      const formatted = json.map((row: any) => ({
-         const [month, day, year] = row["Date"].split("/");
-         date: new Date(`${year}-${month}-${day}`).toISOString(),
-        
-        value: Number(row["GRADOS DÍA"]) || 0,
-      }));
+    const formatted = json.map((row: any) => {
+  const [month, day, year] = row["Date"].split("/");
+
+  return {
+    date: new Date(`${year}-${month}-${day}`).toISOString(),
+    value: Number(row["GRADOS DÍA"]) || 0,
+  };
+});
+``
 
       setGdData(formatted);
     });
